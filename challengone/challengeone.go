@@ -1,4 +1,4 @@
-package main
+package challengeone
 
 import (
 	"fmt"
@@ -8,10 +8,6 @@ import (
 	"strings"
 	"sync"
 )
-
-func main() {
-
-}
 
 type ActiveIps struct {
 	activeIps []string
