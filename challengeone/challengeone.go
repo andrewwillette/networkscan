@@ -20,39 +20,47 @@ func (aips *ActiveIps) addActiveIp(ip string) {
 	aips.activeIps = append(aips.activeIps, ip)
 }
 
+const subnetMask = "/24"
+
 // challengeOne Scan local network for all devices.
-func challengeOne() {
+func challengeOne() []string {
 	lip := getLocalIp()
-	const subnetMask = "/24"
+
 	ip, ipnet, err := net.ParseCIDR(fmt.Sprintf("%s%s", lip, subnetMask))
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	var aips ActiveIps
 	var wg sync.WaitGroup
+	const max = 30
+	semaphore := make(chan struct{}, max)
 	var counter int
 	checkIp := func(ip string) {
+		defer wg.Done()
 		counter++
-		fmt.Printf("checking ip %s\n", ip)
 		if pingIp(ip) {
 			aips.addActiveIp(ip)
 		}
-		wg.Done()
+		<-semaphore
 	}
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
+		semaphore <- struct{}{}
 		wg.Add(1)
 		go checkIp(ip.String())
 	}
 	wg.Wait()
 	fmt.Printf("counter: %d\n", counter)
 	fmt.Printf("%+v\n", aips.activeIps)
+	return aips.activeIps
 }
 
 // pingIp check if ip responds to ping
 func pingIp(ip string) bool {
-	// fmt.Printf("Ping ip %s\n", ip)
-	out, _ := exec.Command("ping", ip, "-c 1", "-W 1").Output()
-	// println(string(out))
+	fmt.Printf("pingIp address: %s\n", ip)
+	out, _ := exec.Command("ping", ip, "-c 1", "-W .05").Output()
+	println(string(out))
 	if strings.Contains(string(out), "1 packets received") {
 		// fmt.Printf("IP address active: %s\n", ip)
 		return true
