@@ -1,6 +1,7 @@
 package challengeone
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,5 +13,6 @@ func TestGetLocalIp(t *testing.T) {
 }
 
 func TestChallengeOne(t *testing.T) {
-	challengeOne()
+	activeIps := challengeOne()
+	fmt.Printf("%+v\n", activeIps)
 }

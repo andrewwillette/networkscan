@@ -34,12 +34,10 @@ func challengeOne() []string {
 
 	var aips ActiveIps
 	var wg sync.WaitGroup
-	const max = 30
+	const max = 20
 	semaphore := make(chan struct{}, max)
-	var counter int
 	checkIp := func(ip string) {
 		defer wg.Done()
-		counter++
 		if pingIp(ip) {
 			aips.addActiveIp(ip)
 		}
@@ -51,18 +49,13 @@ func challengeOne() []string {
 		go checkIp(ip.String())
 	}
 	wg.Wait()
-	fmt.Printf("counter: %d\n", counter)
-	fmt.Printf("%+v\n", aips.activeIps)
 	return aips.activeIps
 }
 
 // pingIp check if ip responds to ping
 func pingIp(ip string) bool {
-	fmt.Printf("pingIp address: %s\n", ip)
 	out, _ := exec.Command("ping", ip, "-c 1", "-W .05").Output()
-	println(string(out))
 	if strings.Contains(string(out), "1 packets received") {
-		// fmt.Printf("IP address active: %s\n", ip)
 		return true
 	} else {
 		return false
